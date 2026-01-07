@@ -9,14 +9,6 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-/** api/test */
-Route::get('test' , function(){
-    return "I am for test only";
-});
-Route::get('test/{x}' , function($x1){
-    return "I am for test only: $x1";
-});
-
 // Route::get('categories' , ['App\Http\Controllers\Api\CategoryController' , 'index']);
 Route::get('categories' , [CategoryController::class,  'index']);
 Route::post('categories' , [CategoryController::class,  'store']);
@@ -28,3 +20,4 @@ Route::prefix('admin')->group(function () {
         'index', 'store', 'update', 'destroy'
     ]);
 });
+Route::apiResource('books' , BookController::class);

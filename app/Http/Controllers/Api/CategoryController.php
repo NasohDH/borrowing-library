@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreCategoryRequest;
+use App\Http\Requests\UpdateCategoryRequest;
 use App\Models\Category;
 use App\ResponseHelper;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class CategoryController extends Controller
 {
@@ -21,33 +23,51 @@ class CategoryController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreCategoryRequest $request)
     {
-        $request->validate([
-            'name' => 'required|max:50|unique:categories'
-        ]);
         $category = new Category();
         $category->name = $request->name;
         $category->save();
-        return ResponseHelper::success("تمت إضافة الصنف" , $category);
+
+        if ($request->hasFile('image')) {
+            $file = $request->file('image');
+            $filename = $category->id . '.' . $file->extension();
+            Storage::putFileAs('category-images', $file, $filename);
+            $category->image = $filename;
+            $category->save();
+        }
+
+        return ResponseHelper::success("تمت إضافة الصنف", $category);
     }
 
-    
+
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UpdateCategoryRequest $request, string $id)
     {
-        $request->validate([
-            'name' => "required|max:50|unique:categories,name,$id"
-        ]);
-
         $category = Category::find($id);
-        $category->name = $request->name;
-        $category->save();
-        return ResponseHelper::success("تم تعديل الصنف" , $category);
+        
+        if (!$category) {
+            return ResponseHelper::failed("الصنف غير موجود");
+        }
 
+        $category->name = $request->name;
+
+        if ($request->hasFile('image')) {
+            if ($category->image) {
+                Storage::delete('category-images/' . $category->image);
+            }
+            
+            $file = $request->file('image');
+            $filename = $category->id . '.' . $file->extension();
+            Storage::putFileAs('category-images', $file, $filename);
+            $category->image = $filename;
+        }
+
+        $category->save();
+        return ResponseHelper::success("تم تعديل الصنف", $category);
     }
 
     /**
@@ -56,7 +76,16 @@ class CategoryController extends Controller
     public function destroy(string $id)
     {
         $category = Category::find($id);
+        
+        if (!$category) {
+            return ResponseHelper::failed("الصنف غير موجود");
+        }
+
+        if ($category->image) {
+            Storage::delete('category-images/' . $category->image);
+        }
+
         $category->delete();
-        return ResponseHelper::success("تم حذف الصنف" , $category);
+        return ResponseHelper::success("تم حذف الصنف", $category);
     }
 }

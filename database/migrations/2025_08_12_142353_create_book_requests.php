@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('book_requests', function (Blueprint $table) {
             $table->id();
+            $table->char('ISBN' , 13)->unique();
             $table->string('book_title' ,70);
             $table->foreignId('customer_id')->constrained();
             $table->foreignId('book_id')->constrained()->nullable();
