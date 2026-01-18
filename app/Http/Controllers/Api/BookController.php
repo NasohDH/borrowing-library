@@ -15,7 +15,7 @@ class BookController extends Controller
      */
     public function index()
     {
-        $books = Book::all();
+        $books = Book::with(['category', 'authors'])->get();
         return ResponseHelper::success(' جميع الكتب', $books);
     }
     /**
@@ -23,15 +23,19 @@ class BookController extends Controller
      */
     public function store(StoreBookRequest $request)
     {
-        $book = Book::create($request->except('cover'));
+        $book = Book::create($request->except(['cover', 'authors']));
 
         if ($request->hasFile('cover')){
             $file = $request->file('cover');
-            $filename = "$request->ISBN." . $file->extension();
-            Storage::putFileAs('book-images', $file ,$filename );
+            $filename = $request->ISBN . '.' . $file->extension();
+            Storage::putFileAs('book-images', $file, $filename);
             $book->cover = $filename;
             $book->save();
         }
+
+        $book->authors()->attach($request->authors);
+
+        $book->load(['category', 'authors']);
 
         return ResponseHelper::success("تمت إضافة الكتاب", $book);
     }
@@ -41,7 +45,8 @@ class BookController extends Controller
      */
     public function show(Book $book)
     {
-        //
+        $book->load(['category', 'authors']);
+        return ResponseHelper::success("تفاصيل الكتاب", $book);
     }
 
 
@@ -50,7 +55,7 @@ class BookController extends Controller
      */
     public function update(UpdateBookRequest $request, Book $book)
     {
-        $book->update($request->except('cover'));
+        $book->update($request->except(['cover', 'authors']));
 
         if ($request->hasFile('cover')) {
             if ($book->cover) {
@@ -63,6 +68,10 @@ class BookController extends Controller
             $book->cover = $filename;
             $book->save();
         }
+
+        $book->authors()->sync($request->authors);
+
+        $book->load(['category', 'authors']);
 
         return ResponseHelper::success("تم تعديل الكتاب", $book);
     }

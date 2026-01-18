@@ -1,11 +1,8 @@
 <?php
-
 namespace Database\Seeders;
-
 use App\Models\Author;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-
 class AuthorSeeder extends Seeder
 {
     /**
@@ -13,13 +10,6 @@ class AuthorSeeder extends Seeder
      */
     public function run(): void
     {
-        $authors = [
-            ['name' => 'نجيب محفوظ'],
-            ['name' => 'طه حسين'],
-            ['name' => 'عباس محمود العقاد'],
-            ['name' => 'توفيق الحكيم'],
-            ['name' => 'أحمد شوقي'],
-        ];
-        Author::insert($authors);
+        Author::factory(10)->create();
     }
 }

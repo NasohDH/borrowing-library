@@ -16,7 +16,7 @@ class CategoryController extends Controller
      */
     public function index()
     {
-        $categories =  Category::all();
+        $categories =  Category::withCount('books')->get();
        return ResponseHelper::success(' جميع الأصناف',$categories);
     }
 
@@ -75,10 +75,14 @@ class CategoryController extends Controller
      */
     public function destroy(string $id)
     {
-        $category = Category::find($id);
+        $category = Category::withCount('books')->find($id);
         
         if (!$category) {
             return ResponseHelper::failed("الصنف غير موجود");
+        }
+
+        if ($category->books_count > 0) {
+            return ResponseHelper::failed("لا يمكن حذف الصنف لوجود كتب مرتبطة به");
         }
 
         if ($category->image) {
